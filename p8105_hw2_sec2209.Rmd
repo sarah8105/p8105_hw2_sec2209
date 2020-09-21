@@ -4,16 +4,36 @@ author: "sarah_8105"
 output: github_document
 ---
 
-I'm an R Markdown document! 
+This is my second homework assignment for P8105.
 
-# Section 1
+```{r libraries}
+library(tidyverse)
+library(readxl)
+```
 
-Here's a **code chunk** that samples from 
-a _normal distribution_:
+
+## Problem 1
+
+The Mr. Trash Wheel data set contains information on trash removal from the Inner Harbor in Baltimore, Maryland. In this first portion of the exercise, I will read and clean the Mr. Trash Wheel precipitation data for 2017 and 2018 and will conduct exploratory analyses of the data.
+
+In this first code chunk, I read in the Mr. Trash Wheel sheet, clean variable names, and omit non-data entries and rows that do not include dumpster-specific data.
 
 ```{r}
-samp = rnorm(100)
-length(samp)
+trash_wheel = read_excel(
+  "./Data/Trash-Wheel-Collection-Totals-8-6-19.xlsx", 
+  sheet = "Mr. Trash Wheel",
+  range = "A2:N406") %>%
+  janitor::clean_names() %>%
+  drop_na(dumpster)
+trash_wheel
+```
+
+
+```{r precip_import}
+precipitation_18 = read_excel(
+  "./Data/Trash-Wheel-Collection-Totals-8-6-19.xlsx", 
+  sheet = "2018 Precipitation",
+  range = "A2:B14")
 ```
 
 # Section 2
