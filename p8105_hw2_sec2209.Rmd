@@ -53,11 +53,15 @@ In the following code chunk, I read in the NYC Transit data, retaining:
 * entrance type
 * ADA compliance
 
+I also convert entry from a character variable (_YES_ vs. _NO_) to a logical variable (_YES = TRUE_ vs. _NO = FALSE_).
+
 ```{r transit_import}
 nyc_transit = read_csv(
   "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
-  select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada)
+  select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>%
+  mutate(entry = ifelse(entry == "yes", TRUE, FALSE))
 nyc_transit
 ```
 
+The resulting data set contains `r nrow(nyc_transit)` observations and `r ncol(nyc_transit)` variables. 
