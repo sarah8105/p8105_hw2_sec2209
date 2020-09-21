@@ -9,6 +9,7 @@ This is my second homework assignment for P8105.
 ```{r libraries}
 library(tidyverse)
 library(readxl)
+library(readr)
 ```
 
 
@@ -36,7 +37,25 @@ precipitation_18 = read_excel(
   range = "A2:B14")
 ```
 
-# Section 2
 
-I can take the mean of the sample, too!
-The mean is `r mean(samp)`.
+## Problem 2
+
+The next problem explores the NYC Transit data on subway station entrances and exits.
+
+In the following code chunk, I read in the NYC Transit data, retaining:
+
+* line
+* station name
+* latitude / longitude
+* routes served
+* entry
+* vending 
+* entrance type
+* ADA compliance
+
+```{r transit_import}
+nyc_transit = read_csv(
+  "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+nyc_transit
+```
+
