@@ -55,7 +55,9 @@ In the following code chunk, I read in the NYC Transit data, retaining:
 
 ```{r transit_import}
 nyc_transit = read_csv(
-  "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+  "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
+  janitor::clean_names() %>%
+  select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada)
 nyc_transit
 ```
 
