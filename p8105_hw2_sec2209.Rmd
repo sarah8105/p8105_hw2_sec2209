@@ -61,7 +61,8 @@ In the next code chunk I combine the annual precipitation over 2018 and 2017 and
 month_df =
   tibble(
     month = 1:12,
-    month_name = month.name
+    month_name = month.name,
+    month_abbr = month.abb
   )
 
 precipitation_df =
@@ -127,3 +128,70 @@ nyc_transit_tidy =
 ```
 
 The resulting data set contains `r nrow(nyc_transit_tidy)` observations and `r ncol(nyc_transit_tidy)` variables. A total of `r nyc_transit_tidy %>% filter(route == "A") %>% distinct(line, station_name) %>% nrow()` distinct stations serve the A train, of which only `r nyc_transit_tidy %>%  filter(route == "A", ada == TRUE) %>% distinct(line, station_name) %>% nrow()` are ADA compliant.
+
+
+ 
+## Problem 3
+
+In the following code chunk, I read in the monthly poll data, transform the date variable into two variables for year and month name, and create a _president_ variable taking the political party values of _gop_ and _dem_. 
+
+```{r poll}
+pols_month_df = 
+  read_csv(
+    "./Data/fivethirtyeight_datasets/pols-month.csv") %>%
+  janitor::clean_names() %>%
+  separate(mon, into = c("year", "month", "day"), sep = "-") %>%
+  mutate(month = as.integer(month),
+         day = as.integer(day),
+         year = as.integer(year),
+         president = ifelse(prez_dem == 1,"dem", ifelse(prez_gop == 1, "gop", NA))) %>%
+  left_join(month_df, by = "month") %>%
+  select(-day, -prez_dem, -prez_gop ,-month) %>%
+  rename(month = month_name) %>%
+  relocate(year, month) 
+         
+```
+
+In the next code chunk I read and clean in the SNP data following the same steps as above.
+
+```{r snp}
+snp_df = 
+  read_csv(
+    "./Data/fivethirtyeight_datasets/snp.csv") %>%
+  janitor::clean_names() %>%
+  separate(date, into = c("month", "day", "year"), sep = "/") %>%
+  mutate(month = as.integer(month),
+         day = as.integer(day),
+         year = as.integer(year)) %>%
+  left_join(month_df, by = "month") %>%
+  select(-day,-month) %>%
+  rename(month = month_name) %>%
+  relocate(year, month) 
+         
+```
+
+Finally, I read and clean the unemployment data. These data are not tidy, so I transpose the data from the wide to long format. Once these data are tidy, I merge the polls, SNP, and unemployment data.
+
+```{r unemply}
+unemply_df = 
+  read_csv(
+    "./Data/fivethirtyeight_datasets/unemployment.csv") %>%
+  pivot_longer(
+    Jan:Dec,
+    names_to = "month_abbr",
+    values_to = "unemployment",
+  ) %>%
+  left_join(month_df, by = "month_abbr") %>%
+  select(-month) %>%
+  rename(month = month_name) %>%
+  janitor::clean_names() %>%
+  relocate(year, month) 
+
+pols_snp_unem = 
+  left_join(pols_month_df, snp_df, by = c("year", "month")) %>%
+  left_join(unemply_df, by = c("year", "month"))
+
+```
+
+The pols-month data contain information on the number of national politicians who are democratic or republican 
+The resulting data set contains `r nrow(pols_snp_unem)` observations and `r ncol(pols_snp_unem)` variables. The data range from `r pull(pols_snp_unem, year) %>% min()` to `r pull(pols_snp_unem, year) %>% max()`.
