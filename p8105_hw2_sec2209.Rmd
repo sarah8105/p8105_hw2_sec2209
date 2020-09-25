@@ -15,11 +15,9 @@ library(readr)
 
 ## Problem 1
 
-The Mr. Trash Wheel data set represents trash that has been removed from the Inner Harbor in Baltimore, Maryland by the Mr. Trash Wheel vessel. The data set contains information on the amount of trash collected by each dumpster by month and year, breaking down specific types of trash items. In this first portion of the exercise, I will read and clean the Mr. Trash Wheel data.
+In this code chunk, I read in the Mr. Trash Wheel data, clean variable names, omit non-data entries and rows that do not include dumpster-specific data, and change the number of sports balls variable to an integer.
 
-In this code chunk, I read in the Mr. Trash Wheel sheet, clean variable names, omit non-data entries and rows that do not include dumpster-specific data, and change the number of sports balls variable to an integer.
-
-```{r}
+```{r trash}
 trash_wheel_df = 
   read_excel(
     "./Data/Trash-Wheel-Collection-Totals-8-6-19.xlsx", 
@@ -33,7 +31,7 @@ trash_wheel_df =
   )
 ```
 
-In the next portion of the exercise, I read in the monthly precipitation data for 2018 and 2017 from the Mr. Trash Wheel data. In this step, I omit rows without precipitation data and create a year variable.
+In the next portion of the exercise, I read in the monthly precipitation data for 2018 and 2017. In this step, I omit rows without precipitation data and create a year variable.
 
 ```{r precip_import}
 precipitation_18 = 
@@ -59,7 +57,7 @@ precipitation_17 =
 
 In the next code chunk I combine the annual precipitation over 2018 and 2017 and create a month character variable.
 
-```{r}
+```{r month}
 month_df =
   tibble(
     month = 1:12,
@@ -73,9 +71,10 @@ left_join(precipitation_df, month_df, by = "month")
 
 ```
 
-The Mr. Trash Wheel data set contains `r nrow(trash_wheel_df)` observations and `r ncol(trash_wheel_df)` variables. 
 
-The resulting precipitation data set contains `r nrow(precipitation_df)` observations and `r ncol(precipitation_df)` variables. 
+The Mr. Trash Wheel data set represents trash that has been removed from the Inner Harbor in Baltimore, Maryland by the Mr. Trash Wheel vessel. The data set contains information on the amount of trash collected by each dumpster by month and year, breaking down specific types of trash items. The Mr. Trash Wheel data set contains `r nrow(trash_wheel_df)` observations. The median number of sports balls in a dumpster in 2017 was `r filter(trash_wheel_df, year == 2017) %>% pull(sports_balls) %>% median()`.
+
+The Mr. Trash Wheel data also contains monthly precipitation data. The resulting precipitation data set for 2018 and 2017 contains `r nrow(precipitation_df)` observations. The total precipitation in 2018 was `r pull(precipitation_18, total) %>% sum()` and the total precipitation in 2017 was `r pull(precipitation_17, total) %>% sum()`.
 
 
  
@@ -97,12 +96,27 @@ In the following code chunk, I read in the NYC Transit data, retaining:
 I also convert entry from a character variable (_YES_ vs. _NO_) to a logical variable (_YES = TRUE_ vs. _NO = FALSE_).
 
 ```{r transit_import}
-nyc_transit = read_csv(
-  "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
+nyc_transit = 
+  read_csv(
+    "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
   select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>%
-  mutate(entry = ifelse(entry == "yes", TRUE, FALSE))
-nyc_transit
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
 ```
 
-The resulting data set contains `r nrow(nyc_transit)` observations and `r ncol(nyc_transit)` variables. 
+The NYC Transit data contains information on the NYC subway stations, including their locations, routes they serve, among other station characteristics and services. In the data cleaning steps above, I retain only the necessary variables for the analysis, clean the variable names, and covert the entry variable from character to logical. The resulting data set contains `r nrow(nyc_transit)` observations and `r ncol(nyc_transit)` variables. There are `r nyc_transit %>% distinct(line, station_name) %>% nrow()` distinct stations within the data and only `r nyc_transit %>% distinct(line, station_name, ada) %>% filter(ada = TRUE) %>% nrow()` are ADA compliant. A total of `r nyc_transit %>% distinct(line, station_name, vending, entry) %>% filter(vending == "NO") %>% pull(entry) %>% mean() %>% round(2)*100`% of stations without vending allow entrance.
+
+These data are not tidy. There is redundancy in observations down rows and multiple columns that represent the route variable. In the following code chunk, I tidy these data by making route number and route name distinct variables.
+
+```{r tidy_transit}
+nyc_transit_tidy = 
+  pivot_longer(
+    nyc_transit,
+    route1:route11,
+    names_to = "route_num",
+    names_prefix = "route",
+    values_to = "route",
+  ) %>%
+  distinct()
+```
+
