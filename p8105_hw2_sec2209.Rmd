@@ -101,10 +101,15 @@ nyc_transit =
     "./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
   select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>%
-  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE),
+         route8 = as.character(route8),
+         route9 = as.character(route9),
+         route10 = as.character(route10),
+         route11 = as.character(route11),
+         )
 ```
 
-The NYC Transit data contains information on the NYC subway stations, including their locations, routes they serve, among other station characteristics and services. In the data cleaning steps above, I retain only the necessary variables for the analysis, clean the variable names, and covert the entry variable from character to logical. The resulting data set contains `r nrow(nyc_transit)` observations and `r ncol(nyc_transit)` variables. There are `r nyc_transit %>% distinct(line, station_name) %>% nrow()` distinct stations within the data and only `r nyc_transit %>% distinct(line, station_name, ada) %>% filter(ada = TRUE) %>% nrow()` are ADA compliant. A total of `r nyc_transit %>% distinct(line, station_name, vending, entry) %>% filter(vending == "NO") %>% pull(entry) %>% mean() %>% round(2)*100`% of stations without vending allow entrance.
+The NYC Transit data contains information on the NYC subway stations, including their locations, routes they serve, among other station characteristics and services. In the data cleaning steps above, I retain only the necessary variables for the analysis, clean the variable names, covert the entry variable from character to logical, and convert all route variables to character. The resulting data set contains `r nrow(nyc_transit)` observations and `r ncol(nyc_transit)` variables. There are `r nyc_transit %>% distinct(line, station_name) %>% nrow()` distinct stations within the data and only `r nyc_transit %>% distinct(line, station_name, ada) %>% filter(ada = TRUE) %>% nrow()` are ADA compliant. A total of `r nyc_transit %>% distinct(line, station_name, vending, entry) %>% filter(vending == "NO") %>% pull(entry) %>% mean() %>% round(2)*100`% of stations without vending allow entrance.
 
 These data are not tidy. There is redundancy in observations down rows and multiple columns that represent the route variable. In the following code chunk, I tidy these data by making route number and route name distinct variables.
 
@@ -117,6 +122,8 @@ nyc_transit_tidy =
     names_prefix = "route",
     values_to = "route",
   ) %>%
+  drop_na(route) %>%
   distinct()
 ```
 
+The resulting data set contains `r nrow(nyc_transit_tidy)` observations and `r ncol(nyc_transit_tidy)` variables. A total of `r nyc_transit_tidy %>% filter(route == "A") %>% distinct(line, station_name) %>% nrow()` distinct stations serve the A train, of which only `r nyc_transit_tidy %>%  filter(route == "A", ada == TRUE) %>% distinct(line, station_name) %>% nrow()` are ADA compliant.
