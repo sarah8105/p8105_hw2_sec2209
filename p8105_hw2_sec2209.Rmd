@@ -75,7 +75,7 @@ left_join(precipitation_df, month_df, by = "month")
 
 The Mr. Trash Wheel data set represents trash that has been removed from the Inner Harbor in Baltimore, Maryland by the Mr. Trash Wheel vessel. The data set contains information on the amount of trash collected by each dumpster by month and year, breaking down specific types of trash items. The Mr. Trash Wheel data set contains `r nrow(trash_wheel_df)` observations. The median number of sports balls in a dumpster in 2017 was `r filter(trash_wheel_df, year == 2017) %>% pull(sports_balls) %>% median()`.
 
-The Mr. Trash Wheel data also contains monthly precipitation data. The resulting precipitation data set for 2018 and 2017 contains `r nrow(precipitation_df)` observations. The total precipitation in 2018 was `r pull(precipitation_18, total) %>% sum()` and the total precipitation in 2017 was `r pull(precipitation_17, total) %>% sum()`.
+The Mr. Trash Wheel data also contains monthly precipitation data. The resulting precipitation data set for 2018 and 2017 contains `r nrow(precipitation_df)` observations. The total precipitation in 2018 was `r pull(precipitation_18, total) %>% sum()` inches and the total precipitation in 2017 was `r pull(precipitation_17, total) %>% sum()` inches.
 
 
  
@@ -83,7 +83,7 @@ The Mr. Trash Wheel data also contains monthly precipitation data. The resulting
 
 The next problem explores the NYC Transit data on subway station entrances and exits.
 
-In the following code chunk, I read in the NYC Transit data, retaining:
+In the following code chunk, I read in the NYC Transit data, retaining the following variables:
 
 * line
 * station name
@@ -110,7 +110,7 @@ nyc_transit =
          )
 ```
 
-The NYC Transit data contains information on the NYC subway stations, including their locations, routes they serve, among other station characteristics and services. In the data cleaning steps above, I retain only the necessary variables for the analysis, clean the variable names, covert the entry variable from character to logical, and convert all route variables to character. The resulting data set contains `r nrow(nyc_transit)` observations and `r ncol(nyc_transit)` variables. There are `r nyc_transit %>% distinct(line, station_name) %>% nrow()` distinct stations within the data and only `r nyc_transit %>% distinct(line, station_name, ada) %>% filter(ada = TRUE) %>% nrow()` are ADA compliant. A total of `r nyc_transit %>% distinct(line, station_name, vending, entry) %>% filter(vending == "NO") %>% pull(entry) %>% mean() %>% round(2)*100`% of stations without vending allow entrance.
+The NYC Transit data contains information on the NYC subway stations, including their locations and routes they serve, among other station characteristics and services. In the data cleaning steps above, I retain only the necessary variables for the analysis, clean the variable names, covert the entry variable from character to logical, and convert all route variables to character. The resulting data set contains `r nrow(nyc_transit)` observations and `r ncol(nyc_transit)` variables. There are `r nyc_transit %>% distinct(line, station_name) %>% nrow()` distinct stations within the data and only `r nyc_transit %>% distinct(line, station_name, ada) %>% filter(ada == TRUE) %>% nrow()` are ADA compliant. A total of `r nyc_transit %>% distinct(line, station_name, vending, entry) %>% filter(vending == "NO") %>% pull(entry) %>% mean() %>% round(2)*100`% of stations without vending allow entrance.
 
 These data are not tidy. There is redundancy in observations down rows and multiple columns that represent the route variable. In the following code chunk, I tidy these data by making route number and route name distinct variables.
 
@@ -133,7 +133,7 @@ The resulting data set contains `r nrow(nyc_transit_tidy)` observations and `r n
  
 ## Problem 3
 
-In the following code chunk, I read in the monthly poll data, transform the date variable into two variables for year and month name, and create a _president_ variable taking the political party values of _gop_ and _dem_. 
+In the following code chunk, I read in the FiveThirtyEight pols-month data, transform the date variable into two variables for year and month name, and create a _president_ variable taking the political party values of _gop_ and _dem_. 
 
 ```{r poll}
 pols_month_df = 
@@ -152,7 +152,7 @@ pols_month_df =
          
 ```
 
-In the next code chunk I read and clean in the SNP data following the same steps as above.
+In the next code chunk I read and clean in the FiveThirtyEight snp data following the same steps as above.
 
 ```{r snp}
 snp_df = 
@@ -170,7 +170,7 @@ snp_df =
          
 ```
 
-Finally, I read and clean the unemployment data. These data are not tidy, so I transpose the data from the wide to long format. Once these data are tidy, I merge the polls, SNP, and unemployment data.
+Finally, I read and clean the unemployment data. These data are not tidy, so I transpose the data from the wide to long format. Once these data are tidy, I merge the pols-month, snp, and unemployment data by month and year.
 
 ```{r unemply}
 unemply_df = 
@@ -193,5 +193,8 @@ pols_snp_unem =
 
 ```
 
-The pols-month data contain information on the number of national politicians who are democratic or republican 
-The resulting data set contains `r nrow(pols_snp_unem)` observations and `r ncol(pols_snp_unem)` variables. The data range from `r pull(pols_snp_unem, year) %>% min()` to `r pull(pols_snp_unem, year) %>% max()`.
+The pols-month data contain information on the number of governors, representatives, and senators who are democratic or republican, as well as whether the president is democratic or republican, by month and year. The snp data contain the Standard & Poor's stock market index (S&P) closing values by month and year, and the unemployment data contain percentage unemployed by month and year. These data are used by FiveThirtyEight to provide evidence on whether there is an association between political party and economic success in the US.
+
+The resulting merged data set contains `r nrow(pols_snp_unem)` observations and `r ncol(pols_snp_unem)` variables. The data range from `r pull(pols_snp_unem, year) %>% min()` to `r pull(pols_snp_unem, year) %>% max()`. In 1947, the president had a political party (`president`) of "`r pols_snp_unem %>% filter(year == 1947, month == 'January') %>% pull(president)`", and in 2015, the president had a political party of "`r pols_snp_unem %>% filter(year == 2015, month == 'January') %>% pull(president)`".
+
+While the full data set begins in `r pull(pols_snp_unem, year) %>% min()`, unemployment data do not begin until `r pols_snp_unem %>% drop_na(unemployment) %>% pull(year) %>% min()` and S&P data do not begin until `r pols_snp_unem %>% drop_na(close) %>% pull(year) %>% min()`. In 1948, the average monthly unemployment (`unemployment`) was `r pols_snp_unem %>% filter(year == 1948) %>% pull(unemployment) %>% mean(na.rm = TRUE) %>% round(1)`%, and in 2015, the average monthly unemployment (`unemployment`) was `r pols_snp_unem %>% filter(year == 2015) %>% pull(unemployment) %>% mean(na.rm = TRUE) %>% round(1)`%. In 1950 the average S&P closing value (`close`) was `r pols_snp_unem %>% filter(year == 1950) %>% pull(close) %>% mean(na.rm = TRUE) %>% round(2)` and in 2015 the average S&P closing value (`close`) was `r pols_snp_unem %>% filter(year == 2015) %>% pull(close) %>% mean(na.rm = TRUE) %>% round(2)`. 
